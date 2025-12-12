@@ -1,0 +1,60 @@
+stats.c
+
+#include "stats.h"
+#include <stdio.h>
+#include <float.h>
+
+void stats_compute(const Student *students, int count, Statistics *stats) {
+    if (!students || !stats || count <= 0) {
+        if (stats) {
+            stats->count = 0;
+            stats->avg_score1 = 0.0;
+            stats->avg_score2 = 0.0;
+            stats->avg_score3 = 0.0;
+            stats->overall_avg = 0.0;
+            stats->min_avg = 0.0;
+            stats->max_avg = 0.0;
+        }
+        return;
+    }
+    
+    double sum1 = 0.0, sum2 = 0.0, sum3 = 0.0, sum_avg = 0.0;
+    double min = DBL_MAX, max = -DBL_MAX;
+    
+    for (int i = 0; i < count; i++) {
+        sum1 += students[i].score1;
+        sum2 += students[i].score2;
+        sum3 += students[i].score3;
+        
+        double avg = student_average(&students[i]);
+        sum_avg += avg;
+        
+        if (avg < min) min = avg;
+        if (avg > max) max = avg;
+    }
+    
+    stats->count = count;
+    stats->avg_score1 = sum1 / count;
+    stats->avg_score2 = sum2 / count;
+    stats->avg_score3 = sum3 / count;
+    stats->overall_avg = sum_avg / count;
+    stats->min_avg = min;
+    stats->max_avg = max;
+}
+
+void stats_print(const Statistics *stats) {
+    if (!stats || stats->count == 0) {
+        printf("No students to compute statistics.\\n");
+        return;
+    }
+    
+    printf("\\n=== STATISTICS ===\\n");
+    printf("Total Students: %d\\n", stats->count);
+    printf("Average Score 1: %.2f\\n", stats->avg_score1);
+    printf("Average Score 2: %.2f\\n", stats->avg_score2);
+    printf("Average Score 3: %.2f\\n", stats->avg_score3);
+    printf("Overall Average: %.2f\\n", stats->overall_avg);
+    printf("Lowest Average: %.2f\\n", stats->min_avg);
+    printf("Highest Average: %.2f\\n", stats->max_avg);
+    printf("==================\\n\\n");
+}

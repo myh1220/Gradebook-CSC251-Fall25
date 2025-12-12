@@ -1,0 +1,21 @@
+stats.h
+
+#ifndef STATS_H
+#define STATS_H
+
+#include "student.h"
+
+typedef struct {
+    int count;
+    double avg_score1;
+    double avg_score2;
+    double avg_score3;
+    double overall_avg;
+    double min_avg;
+    double max_avg;
+} Statistics;
+
+void stats_compute(const Student *students, int count, Statistics *stats);
+void stats_print(const Statistics *stats);
+
+#endif /* STATS_H */
