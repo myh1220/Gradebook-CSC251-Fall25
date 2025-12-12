@@ -2,24 +2,22 @@
 STUDENT GRADEBOOK SYSTEM: INSTRUCTIONS AND GUIDE
 =====================================================
 
-This document provides a beginner-friendly guide to building and running the Gradebook System, detailing its commands, file formats, and limitations.
 
 -----------------------------------------------------
 PART 1: BUILD AND RUN INSTRUCTIONS
 -----------------------------------------------------
 
-This is a multi-file C project that requires compilation via the provided 'Makefile'.
 
 ### A. How to Build (Compile)
 
-1.  **Placement:** Ensure all .c, .h, and the 'Makefile' are in the same directory.
-2.  **Terminal:** Open your command-line interface (Terminal, Bash, etc.) and navigate to that directory.
+1.  **Placement:** Make sure all .c, .h, and the 'Makefile' are in the same directory.
+2.  **Terminal:** Open your command-line interface (terminal, bash, etc.) and navigate to that directory.
 3.  **Command:** Execute the following commands to compile the project:
 
     make clean
     make
 
-    * The **make** command links all source files (main.c, storage.c, sort.c, stats.c, student.c) using strict C99 standards and creates the executable file named **gradebook**.
+    * The **make** command links all source files (main.c, storage.c, sort.c, stats.c, student.c) and creates the executable file named **gradebook**.
 
 ### B. How to Run
 
@@ -39,7 +37,7 @@ PART 2: USAGE AND INPUT FORMATS
 
 ### A. Interactive Menu Commands
 
-The program uses single-character commands in the main loop:
+This program uses single-character commands in the main loop:
 
 | Command | Description |
 | :--- | :--- |
@@ -56,7 +54,7 @@ The program uses single-character commands in the main loop:
 
 ### B. Data File (CSV) Format
 
-The program uses a CSV (Comma Separated Values) format for persistent storage.
+This program uses a CSV (Comma Separated Values) format for persistent storage.
 
 **Record Structure (Strict):** `[ID],"[Name]",[Score 1],[Score 2],[Score 3]`
 
@@ -70,8 +68,6 @@ Example:
 -----------------------------------------------------
 PART 3: KNOWN LIMITATIONS (CONSTRAINTS)
 -----------------------------------------------------
-
-These limitations are hardcoded constraints defined in the C header files (`student.h`).
 
 1.  **Maximum Capacity:** The database is limited to a maximum of **1000 students** (`MAX_STUDENTS`).
 2.  **Number of Scores:** Each student record is fixed to only **3 scores** (score1, score2, score3).
