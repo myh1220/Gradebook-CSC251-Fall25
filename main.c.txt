@@ -1,0 +1,302 @@
+main.c
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "student.h"
+#include "storage.h"
+#include "sort.h"
+#include "stats.h"
+
+#define DEFAULT_FILE "gradebook.csv"
+
+static Student students[MAX_STUDENTS];
+static int student_count = 0;
+static char data_file[256] = DEFAULT_FILE;
+
+static int read_line(const char *prompt, char *buf, size_t size) {
+    printf("%s", prompt);
+    fflush(stdout);
+    
+    if (!fgets(buf, size, stdin)) return 0;
+    
+    size_t len = strlen(buf);
+    if (len > 0 && buf[len - 1] == '\\n') {
+        buf[len - 1] = '\\0';
+    }
+    
+    return 1;
+}
+
+static void cmd_add(void) {
+    if (student_count >= MAX_STUDENTS) {
+        printf("Error: Maximum students reached (%d)\\n", MAX_STUDENTS);
+        return;
+    }
+    
+    Student s;
+    char buf[256];
+    
+    printf("\\n=== Add Student ===\\n");
+    
+    if (!read_line("Student ID: ", buf, sizeof(buf))) return;
+    if (sscanf(buf, "%d", &s.id) != 1 || s.id <= 0) {
+        printf("Error: Invalid ID\\n");
+        return;
+    }
+    
+    for (int i = 0; i < student_count; i++) {
+        if (students[i].id == s.id) {
+            printf("Error: Student ID %d already exists\\n", s.id);
+            return;
+        }
+    }
+    
+    if (!read_line("Name: ", s.name, sizeof(s.name))) return;
+    if (s.name[0] == '\\0') {
+        printf("Error: Name cannot be empty\\n");
+        return;
+    }
+    
+    if (!read_line("Score 1: ", buf, sizeof(buf))) return;
+    if (sscanf(buf, "%lf", &s.score1) != 1 || s.score1 < 0 || s.score1 > 100) {
+        printf("Error: Score must be between 0 and 100\\n");
+        return;
+    }
+    
+    if (!read_line("Score 2: ", buf, sizeof(buf))) return;
+    if (sscanf(buf, "%lf", &s.score2) != 1 || s.score2 < 0 || s.score2 > 100) {
+        printf("Error: Score must be between 0 and 100\\n");
+        return;
+    }
+    
+    if (!read_line("Score 3: ", buf, sizeof(buf))) return;
+    if (sscanf(buf, "%lf", &s.score3) != 1 || s.score3 < 0 || s.score3 > 100) {
+        printf("Error: Score must be between 0 and 100\\n");
+        return;
+    }
+    
+    students[student_count++] = s;
+    printf("Student added successfully.\\n");
+}
+
+static void cmd_find(void) {
+    char buf[256];
+    int id;
+    
+    if (!read_line("\\nFind Student ID: ", buf, sizeof(buf))) return;
+    if (sscanf(buf, "%d", &id) != 1) {
+        printf("Error: Invalid ID\\n");
+        return;
+    }
+    
+    for (int i = 0; i < student_count; i++) {
+        if (students[i].id == id) {
+            printf("\\n");
+            student_print(&students[i]);
+            return;
+        }
+    }
+    
+    printf("Student ID %d not found.\\n", id);
+}
+
+static void cmd_update(void) {
+    char buf[256];
+    int id;
+    
+    if (!read_line("\\nUpdate Student ID: ", buf, sizeof(buf))) return;
+    if (sscanf(buf, "%d", &id) != 1) {
+        printf("Error: Invalid ID\\n");
+        return;
+    }
+    
+    int idx = -1;
+    for (int i = 0; i < student_count; i++) {
+        if (students[i].id == id) {
+            idx = i;
+            break;
+        }
+    }
+    
+    if (idx == -1) {
+        printf("Student ID %d not found.\\n", id);
+        return;
+    }
+    
+    printf("\\nCurrent record:\\n");
+    student_print(&students[idx]);
+    
+    printf("\\nEnter new values (press Enter to keep current):\\n");
+    
+    if (read_line("Name: ", buf, sizeof(buf)) && buf[0] != '\\0') {
+        size_t len = strlen(buf);
+        if (len >= MAX_NAME_LEN) len = MAX_NAME_LEN - 1;
+        memcpy(students[idx].name, buf, len);
+        students[idx].name[len] = '\\0';
+    }
+    
+    if (read_line("Score 1: ", buf, sizeof(buf)) && buf[0] != '\\0') {
+        double score;
+        if (sscanf(buf, "%lf", &score) == 1 && score >= 0 && score <= 100) {
+            students[idx].score1 = score;
+        }
+    }
+    
+    if (read_line("Score 2: ", buf, sizeof(buf)) && buf[0] != '\\0') {
+        double score;
+        if (sscanf(buf, "%lf", &score) == 1 && score >= 0 && score <= 100) {
+            students[idx].score2 = score;
+        }
+    }
+    
+    if (read_line("Score 3: ", buf, sizeof(buf)) && buf[0] != '\\0') {
+        double score;
+        if (sscanf(buf, "%lf", &score) == 1 && score >= 0 && score <= 100) {
+            students[idx].score3 = score;
+        }
+    }
+    
+    printf("Student updated successfully.\\n");
+}
+
+static void cmd_delete(void) {
+    char buf[256];
+    int id;
+    
+    if (!read_line("\\nDelete Student ID: ", buf, sizeof(buf))) return;
+    if (sscanf(buf, "%d", &id) != 1) {
+        printf("Error: Invalid ID\\n");
+        return;
+    }
+    
+    for (int i = 0; i < student_count; i++) {
+        if (students[i].id == id) {
+            for (int j = i; j < student_count - 1; j++) {
+                students[j] = students[j + 1];
+            }
+            student_count--;
+            printf("Student deleted successfully.\\n");
+            return;
+        }
+    }
+    
+    printf("Student ID %d not found.\\n", id);
+}
+
+static void cmd_list(void) {
+    if (student_count == 0) {
+        printf("\\nNo students in database.\\n");
+        return;
+    }
+    
+    printf("\\n=== Student List (%d students) ===\\n", student_count);
+    for (int i = 0; i < student_count; i++) {
+        student_print(&students[i]);
+    }
+}
+
+static void cmd_sort(void) {
+    if (student_count == 0) {
+        printf("\\nNo students to sort.\\n");
+        return;
+    }
+    
+    char buf[256];
+    printf("\\nSort by:\\n");
+    printf("1. ID\\n");
+    printf("2. Name\\n");
+    printf("3. Average\\n");
+    
+    if (!read_line("Choice: ", buf, sizeof(buf))) return;
+    
+    SortKey key;
+    switch (buf[0]) {
+        case '1': key = SORT_BY_ID; break;
+        case '2': key = SORT_BY_NAME; break;
+        case '3': key = SORT_BY_AVERAGE; break;
+        default:
+            printf("Invalid choice.\\n");
+            return;
+    }
+    
+    sort_students(students, student_count, key);
+    printf("Students sorted successfully.\\n");
+}
+
+static void cmd_stats(void) {
+    Statistics stats;
+    stats_compute(students, student_count, &stats);
+    stats_print(&stats);
+}
+
+static void cmd_save(void) {
+    if (storage_save(data_file, students, student_count)) {
+        printf("Data saved to %s\\n", data_file);
+    } else {
+        printf("Error saving data.\\n");
+    }
+}
+
+static void cmd_load(void) {
+    int count = storage_load(data_file, students, MAX_STUDENTS);
+    if (count < 0) {
+        printf("Error loading data.\\n");
+    } else {
+        student_count = count;
+        printf("Loaded %d students from %s\\n", count, data_file);
+    }
+}
+
+static void print_menu(void) {
+    printf("\\n=== GRADEBOOK SYSTEM ===\\n");
+    printf("a - Add student\\n");
+    printf("f - Find student\\n");
+    printf("u - Update student\\n");
+    printf("d - Delete student\\n");
+    printf("l - List all students\\n");
+    printf("s - Sort students\\n");
+    printf("t - Show statistics\\n");
+    printf("w - Save to file\\n");
+    printf("r - Load from file\\n");
+    printf("q - Quit\\n");
+    printf("========================\\n");
+}
+
+int main(int argc, char *argv[]) {
+    if (argc > 1) {
+        strncpy(data_file, argv[1], sizeof(data_file) - 1);
+        data_file[sizeof(data_file) - 1] = '\\0';
+    }
+    
+    cmd_load();
+    
+    char buf[256];
+    while (1) {
+        print_menu();
+        if (!read_line("\\nCommand: ", buf, sizeof(buf))) break;
+        
+        switch (buf[0]) {
+            case 'a': cmd_add(); break;
+            case 'f': cmd_find(); break;
+            case 'u': cmd_update(); break;
+            case 'd': cmd_delete(); break;
+            case 'l': cmd_list(); break;
+            case 's': cmd_sort(); break;
+            case 't': cmd_stats(); break;
+            case 'w': cmd_save(); break;
+            case 'r': cmd_load(); break;
+            case 'q':
+                printf("\\nSave before quitting? (y/n): ");
+                if (read_line("", buf, sizeof(buf)) && buf[0] == 'y') {
+                    cmd_save();
+                }
+                printf("Goodbye!\\n");
+                return 0;
+            default:
+                printf("Unknown command.\\n");
+        }
+    }
+    
+    return 0;
+}

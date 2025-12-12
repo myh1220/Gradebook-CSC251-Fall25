@@ -1,0 +1,31 @@
+MakeFile
+
+CC = gcc
+CFLAGS = -Wall -Wextra -Werror -std=c99 -pedantic -O2
+TARGET = gradebook
+OBJS = main.o student.o storage.o sort.o stats.o
+
+.PHONY: all clean
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS)
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
+
+main.o: main.c student.h storage.h sort.h stats.h
+	$(CC) $(CFLAGS) -c main.c
+
+student.o: student.c student.h
+	$(CC) $(CFLAGS) -c student.c
+
+storage.o: storage.c storage.h student.h
+	$(CC) $(CFLAGS) -c storage.c
+
+sort.o: sort.c sort.h student.h
+	$(CC) $(CFLAGS) -c sort.c
+
+stats.o: stats.c stats.h student.h
+	$(CC) $(CFLAGS) -c stats.c
+
+clean:
+	rm -f $(TARGET) $(OBJS) gradebook.csv gradebook.csv.tmp
